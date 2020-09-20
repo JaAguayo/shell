@@ -70,68 +70,65 @@ def command_handler(args):
     if len(args) == 0:
         return
 
-    if args[0].lower() == 'exit':
+    if args[0].lower() == 'exit': #exit command
         os.write(2, ("Exiting shell...\n").encode())
         sys.exit(1)
+        
     if args[0] == 'cd':
         try:
-            os.chdir(args[1])
+            os.chdir(args[1]) #change directory command with whatever is after cd
         except FileNotFoundError:
             os.write(2,("Directory %s not found\n" % args[1]).encode())
         except IndexError:
             os.write(2, ("Must write a directory to swap to\n").encode())
             
     elif "|" in args:
-        forked = os.fork()
-        if forked < 0:
-            os.write(2, ("Fork Failed").encode())
-            sys.exit(1)
-        elif forked == 0:
-            pipe(args)
-        else:
-            if args[-1] != "&":
-                val = os.wait()
-                if val[1] != 0:
-                    os.write(2, ("Program terminated with exit code: %d\n" % val[1]).encode())
+        pipe(args)
+        if args[-1] != "&":
+            val = os.wait() #os.wait returns childs PID and exit status
+            if val[1] != 0: #if the exit code isnt returned correctly
+                os.write(2, ("Program terminated with exit code: %d\n" % val[1]).encode())
     else:
         rc = os.fork()
 
-        prog_wait = True
+        prog_wait = True #set a flag for wait, default wait
 
         if '&' in args:
-            prog_wait = False
+            prog_wait = False #if there is a "&" it will set the the flag to False
             args.remove("&")
 
         if rc < 0:
-            os.write(2, ("Fork Failed").encode())
+            os.write(2,("Forked Failed").encode())
             sys.exit(1)
+
         elif rc == 0:
-            run_process(args)
+            run_process(args) #exec command
+
         else:
-            if prog_wait:
-                val = os.wait()
-                if val[1] != 0 and val[1] != 256:
+            if prog_wait: #if wait flag is true run os.wait()
+                val = os.wait() #os.wait returns childs PID and exit status
+                if val[1] != 0: #if the exit code isnt returned correctly
                     os.write(2, ("Program terminated with exit code: %d\n" % val[1]).encode())
 
 while True:
-    prompt = "$ "
-    if 'PS1' in os.environ:
+    prompt = "$ " #default prompt if PS1 isnt valid
+    if 'PS1' in os.environ: #check if PS1 is set in the environment to use as prompt
         prompt = os.environ['PS1']
 
     try:
-        os.write(1, prompt.encode())
-        args = os.read(0,10000)
+        os.write(1, prompt.encode()) #prints the prompt
+        args = os.read(0,10000) #reads input from keyboard
 
-        if len(args) == 0:
+        if len(args) == 0: 
             break
         
-        args = args.decode().split("\n")
+        args = args.decode().split("\n") #split the args by newlines 
 
-        if not args:
+        if not args: #if nothing is entered just redisplays the prompt
             continue
 
         for arg in args:
-            command_handler(arg.split())
-
+            command_handler(arg.split()) #send split args to commnd_handler
+             
     except EOFError:
         sys.exit(1)
