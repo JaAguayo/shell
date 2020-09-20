@@ -35,6 +35,7 @@ def run_process(args):
         except FileNotFoundError:
             pass
         except Exception:
+            pass
             sys.exit(1)
     os.write(2, ("%s: Command not found\n" % args[0]).encode)
     sys.exit(1)
@@ -83,11 +84,20 @@ def command_handler(args):
             os.write(2, ("Must write a directory to swap to\n").encode())
             
     elif "|" in args:
-        pipe(args)
-        if args[-1] != "&":
-            val = os.wait() #os.wait returns childs PID and exit status
-            if val[1] != 0: #if the exit code isnt returned correctly
-                os.write(2, ("Program terminated with exit code: %d\n" % val[1]).encode())
+        rc = os.fork()
+
+        if rc < 0:
+            os.write(2,("Forked Failed").encode())
+            sys.exit(1)
+            
+        if rc == 0:
+            pipe(args)
+            
+        else:    
+            if args[-1] != "&":
+                val = os.wait() #os.wait returns childs PID and exit status
+                if val[1] != 0: #if the exit code isnt returned correctly
+                    os.write(2, ("Program terminated with exit code: %d\n" % val[1]).encode())
     else:
         rc = os.fork()
 
