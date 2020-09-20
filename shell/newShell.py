@@ -103,7 +103,7 @@ while(1):
 
     if command == '': #if nothing is entered it redisplays prompt
         continue
-    
+        
     elif command == 'exit': #exit command
         sys.exit(1)    
     
@@ -136,8 +136,8 @@ while(1):
         input_redir(command) #input redirection
 
     elif '|' in command:
-        pipe(command) #piping        
-    
+        pipe(command) #piping
+        
     elif '/'in command[0]: #handles path names to execute
         program = command[0]
         try:
@@ -147,4 +147,3 @@ while(1):
         #execute commands
     else:
         execute_command(command)
-
